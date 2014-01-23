@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Python | 後輩に贈るブログ]]></title>
+  <link href="http://k-komori-protech.github.io/blog/categories/python/atom.xml" rel="self"/>
+  <link href="http://k-komori-protech.github.io/"/>
+  <updated>2014-01-23T21:44:05+09:00</updated>
+  <id>http://k-komori-protech.github.io/</id>
+  <author>
+    <name><![CDATA[先輩]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Pytzでタイムゾーンを考慮する方法]]></title>
+    <link href="http://k-komori-protech.github.io/blog/2014/01/23/howto-pytz/"/>
+    <updated>2014-01-23T00:23:10+09:00</updated>
+    <id>http://k-komori-protech.github.io/blog/2014/01/23/howto-pytz</id>
+    <content type="html"><![CDATA[<p>プログラムから日時を扱う時に注意が必要なのはタイムゾーンです。
+地球上の場所によって時間が変わる、いわゆる時差というやつです。</p>
+
+<p><a href="http://ja.wikipedia.org/wiki/%E6%A8%99%E6%BA%96%E6%99%82">http://ja.wikipedia.org/wiki/%E6%A8%99%E6%BA%96%E6%99%82</a></p>
+
+<p>Pythonでは日付型は標準でサポートされていて時差の考慮もできるんだけど、タイムゾーン自体の定義がないため自分で書く必要があります。</p>
+
+<p>``` python</p>
+
+<h1>UTCのタイムゾーンの定義</h1>
+
+<p>class UTC(datetime.tzinfo):</p>
+
+<pre><code>def utcoffset(self, dt):
+    return datetime.timedelta(0)
+def dst(self, dt):
+    return datetime.timedelta(0)
+def tzname(self, dt):
+    return 'UTC'
+</code></pre>
+
+<h1>JSTのタイムゾーンの定義</h1>
+
+<p>class JST(datetime.tzinfo):</p>
+
+<pre><code> def utcoffset(self, dt):
+     return datetime.timedelta(hours=9)
+ def dst(self, dt):
+     return datetime.timedelta(0)
+ def tzname(self, dt):
+     return 'JST'
+</code></pre>
+
+<p>```</p>
+
+<p>タイムゾーンの変換を行うにはdatetimeオブジェクトにタイムゾーンが設定されている必要があります。
+普通にdatetimeオブジェクトを作るとタイムゾーンは設定されないです。</p>
+
+<p>``` python</p>
+
+<blockquote><blockquote><blockquote><p>dt = datetime.datetime.now()
+dt.strftime(&lsquo;%Y-%m-%d %H:%M:%S %Z%z&rsquo;)
+&lsquo;2013-04-12 10:42:50 &rsquo;
+dt.tzinfo</p>
+
+<p>```</p></blockquote></blockquote></blockquote>
+
+<p>タイムゾーンを指定するには、コンストラクタに渡すか、replace()でtzinfoを設定する。</p>
+
+<p>``` python</p>
+
+<blockquote><blockquote><blockquote><p>dt = datetime.datetime(2013, 4, 12, 9, 0, 0, tzinfo=JST())
+dt.strftime(&lsquo;%Y-%m-%d %H:%M:%S %Z%z&rsquo;)
+&lsquo;2013-04-12 09:00:00 JST+0900&rsquo;
+dt.tzinfo
+&lt;<strong>main</strong>.JST object at 0xffeb69cc>
+```</p></blockquote></blockquote></blockquote>
+
+<p>``` python</p>
+
+<blockquote><blockquote><blockquote><p>dt = datetime.datetime(2013, 4, 12, 9, 0, 0)
+dt = dt.replace(tzinfo=JST())
+dt.strftime(&lsquo;%Y-%m-%d %H:%M:%S %Z%z&rsquo;)
+&lsquo;2013-04-12 09:00:00 JST+0900&rsquo;
+dt.tzinfo
+&lt;<strong>main</strong>.JST object at 0xffeb638c>
+```</p></blockquote></blockquote></blockquote>
+
+<p>astimezone()で別のタイムゾーンに変換できる。</p>
+
+<p>```python</p>
+
+<blockquote><blockquote><blockquote><p>dt = datetime.datetime(2013, 4, 12, 9, 0, 0, tzinfo=JST())
+dt.strftime(&lsquo;%Y-%m-%d %H:%M:%S %Z%z&rsquo;)
+&lsquo;2013-04-12 09:00:00 JST+0900&rsquo;
+dt.astimezone(UTC()).strftime(&lsquo;%Y-%m-%d %H:%M:%S %Z%z&rsquo;)
+&lsquo;2013-04-12 00:00:00 UTC+0000&rsquo;
+```</p></blockquote></blockquote></blockquote>
+
+<p>で、本題です。
+毎回タイムゾーンの定義や指定をするのはめんどいなーっと思ってライブラリを探したらありました。</p>
+
+<p><strong>pytz</strong>
+<a href="https://pypi.python.org/pypi/pytz">https://pypi.python.org/pypi/pytz</a></p>
+
+<p>UTCのタイムゾーンを取得するには以下のようにします。</p>
+
+<p>``` python</p>
+
+<blockquote><blockquote><blockquote><p>pytz.utc
+<UTC>
+```</p></blockquote></blockquote></blockquote>
+
+<p>JSTのタイムゾーンは名前を指定して取得できます。名前はLinuxなどで使われている一般的なやつです。
+余談：日本にも複数のタイムゾーンがあるんだね（<a href="http://www.atmarkit.co.jp/fdb/rensai/sqlclinic04/sqlclinic04_3.html%EF%BC%89">http://www.atmarkit.co.jp/fdb/rensai/sqlclinic04/sqlclinic04_3.html%EF%BC%89</a></p>
+
+<p>``` python</p>
+
+<blockquote><blockquote><blockquote><p>pytz.timezone(&lsquo;Asia/Tokyo&rsquo;)
+<DstTzInfo 'Asia/Tokyo' CJT+9:00:00 STD>
+```</p></blockquote></blockquote></blockquote>
+
+<p>astimezone()を使用して変換をしてみます。</p>
+
+<p>``` python</p>
+
+<blockquote><blockquote><blockquote><p>dt = datetime.datetime(2013, 4, 12, 9, 0, 0, tzinfo=pytz.timezone(&lsquo;Asia/Tokyo&rsquo;))
+dt.strftime(&lsquo;%Y-%m-%d %H:%M:%S %Z%z&rsquo;)
+&lsquo;2013-04-12 09:00:00 CJT+0900&rsquo;
+dt.astimezone(pytz.utc).strftime(&lsquo;%Y-%m-%d %H:%M:%S %Z%z&rsquo;)
+&lsquo;2013-04-12 00:00:00 UTC+0000&rsquo;</p>
+
+<p>```</p></blockquote></blockquote></blockquote>
+
+<p>他、サマータイムやdaylight savings time（DST、初めて知った）を考慮する関数もあるみたいですが、日本では関係ないので割愛します。</p>
+]]></content>
+  </entry>
+  
+</feed>

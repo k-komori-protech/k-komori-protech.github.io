@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: 
+
+Sitemap: http://k-komori-protech.github.io/sitemap.xml 
