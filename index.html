@@ -9,8 +9,7 @@
   <meta name="author" content="先輩">
 
   
-  <meta name="description" content="プログラムから日時を扱う時に注意が必要なのはタイムゾーンです。
-地球上の場所によって時間が変わる、いわゆる時差というやつです。 http://ja.wikipedia.org/wiki/%E6%A8%99%E6%BA%96%E6%99%82 &hellip;">
+  <meta name="description" content="SQLiteとは？ SQLiteは軽量でサーバーを必要としないデータベースエンジンです。 http://sqlite.org/ Python 2.5から標準ライブラリとしてsqlite3モジュールが入っていますので、それを使用してアクセスします。 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -66,6 +65,160 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/01/23/howto-sqlite3-in-python/">PythonでSQLite3を操作する方法</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-01-23T22:44:41+09:00" pubdate data-updated="true">2014-01-23</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>SQLiteとは？</h2>
+
+<p>SQLiteは軽量でサーバーを必要としないデータベースエンジンです。</p>
+
+<p><a href="http://sqlite.org/">http://sqlite.org/</a></p>
+
+<p>Python 2.5から標準ライブラリとしてsqlite3モジュールが入っていますので、それを使用してアクセスします。
+もし入っていない場合は自分でビルドして利用することもできますが、やり方については割愛します。</p>
+
+<h2>データベースファイルを用意しよう</h2>
+
+<p>元々のSQLiteにはSQLを実行するためのツールが付属していてそれを使うことが多いんですが、
+今回は全部Pythonからやることにします。</p>
+
+<ol>
+<li>まずモジュールをインポート</li>
+<li>データベースへ接続</li>
+<li>SQLを実行するためのカーソルを取得</li>
+<li>SQLを実行</li>
+<li>使い終わったカーソルを開放</li>
+<li>接続を閉じる</li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">sqlite3</span> <span class="c"># (1)</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">conn</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;./hoge.db&#39;</span><span class="p">)</span> <span class="c"># (2)</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">cur</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span> <span class="c"># (3)</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&#39;CREATE TABLE books (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, author TEXT);&#39;</span><span class="p">)</span> <span class="c"># (4)</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">sqlite3</span><span class="o">.</span><span class="n">Cursor</span> <span class="nb">object</span> <span class="n">at</span> <span class="mh">0xffec02a0</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">cur</span><span class="o">.</span><span class="n">close</span><span class="p">()</span> <span class="c"># (5)</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span> <span class="c"># (6)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>これでhoge.dbというデータベースファイルができて、さらにbooksというテーブルが作られました。
+接続はまだしも、カーソルという聞き慣れない言葉が出てきましたが後で説明するので、
+とりあえずSQLを実行するにはカーソルが必要だと思っておいてください。</p>
+
+<p>カーソルのexecute()メソッドでSQLを実行でき、戻り値は呼び出し先と同一のカーソルになります。</p>
+
+<h2>データベースから行を読んでみよう</h2>
+
+<p>またデータベースへ接続し、カーソルを取得しましょう。
+そしてSELECT文を実行し、カーソルを介して結果を取得します。
+カーソルはイテレータとして扱うことができますのでforでprintしています。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&#39;SELECT * FROM books;&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">sqlite3</span><span class="o">.</span><span class="n">Cursor</span> <span class="nb">object</span> <span class="n">at</span> <span class="mh">0xffec02a0</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
+</span><span class='line'><span class="o">...</span>   <span class="k">print</span> <span class="n">row</span>
+</span><span class='line'><span class="o">...</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>はい、何もprintされません。
+まだテーブルに何もデータが入っていないからですね。</p>
+
+<h2>データベースへ行を入れてみよう</h2>
+
+<p>もう大体わかると思いますので、説明は割愛します。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&#39;INSERT INTO books (name, author) VALUES (&quot;今度、転職します&quot;, &quot;先輩&quot;);&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">sqlite3</span><span class="o">.</span><span class="n">Cursor</span> <span class="nb">object</span> <span class="n">at</span> <span class="mh">0xffec02a0</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&#39;INSERT INTO books (name, author) VALUES (&quot;Yes, we can&quot;, &quot;Obama&quot;);&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">sqlite3</span><span class="o">.</span><span class="n">Cursor</span> <span class="nb">object</span> <span class="n">at</span> <span class="mh">0xffec02a0</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>COMMITは接続オブジェクトのcommit()メソッドで行えます。</p>
+
+<h2>もう一回、データベースから行を読んでみる</h2>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&#39;SELECT * FROM books;&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">sqlite3</span><span class="o">.</span><span class="n">Cursor</span> <span class="nb">object</span> <span class="n">at</span> <span class="mh">0xffec02a0</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
+</span><span class='line'><span class="o">...</span>   <span class="k">print</span> <span class="n">row</span>
+</span><span class='line'><span class="o">...</span>
+</span><span class='line'><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">u&#39;</span><span class="se">\u4eca\u5ea6\u3001\u8ee2\u8077\u3057\u307e\u3059</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">u&#39;</span><span class="se">\u5148\u8f29</span><span class="s">&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">u&#39;Yes, we can&#39;</span><span class="p">,</span> <span class="s">u&#39;Obama&#39;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>表示されましたね！
+日本語はうまく表示されてないのはUnicode文字列として読み込まれるためです。
+適切に文字コード変換すればちゃんと表示されます。</p>
+
+<h2>終わり</h2>
+
+<p>大体、こんな感じです。
+詳しくはドキュメントを見てね。</p>
+
+<p><a href="http://docs.python.jp/2.7/library/sqlite3.html">http://docs.python.jp/2.7/library/sqlite3.html</a></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -261,6 +414,10 @@
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2014/01/23/howto-sqlite3-in-python/">PythonでSQLite3を操作する方法</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2014/01/23/howto-pytz/">Pytzでタイムゾーンを考慮する方法</a>

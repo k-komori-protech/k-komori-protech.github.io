@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Python | 後輩に贈るブログ]]></title>
   <link href="http://k-komori-protech.github.io/blog/categories/python/atom.xml" rel="self"/>
   <link href="http://k-komori-protech.github.io/"/>
-  <updated>2014-01-23T22:30:11+09:00</updated>
+  <updated>2014-01-24T00:19:01+09:00</updated>
   <id>http://k-komori-protech.github.io/</id>
   <author>
     <name><![CDATA[先輩]]></name>
@@ -12,6 +12,112 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[PythonでSQLite3を操作する方法]]></title>
+    <link href="http://k-komori-protech.github.io/blog/2014/01/23/howto-sqlite3-in-python/"/>
+    <updated>2014-01-23T22:44:41+09:00</updated>
+    <id>http://k-komori-protech.github.io/blog/2014/01/23/howto-sqlite3-in-python</id>
+    <content type="html"><![CDATA[<h2>SQLiteとは？</h2>
+
+<p>SQLiteは軽量でサーバーを必要としないデータベースエンジンです。</p>
+
+<p><a href="http://sqlite.org/">http://sqlite.org/</a></p>
+
+<p>Python 2.5から標準ライブラリとしてsqlite3モジュールが入っていますので、それを使用してアクセスします。
+もし入っていない場合は自分でビルドして利用することもできますが、やり方については割愛します。</p>
+
+<h2>データベースファイルを用意しよう</h2>
+
+<p>元々のSQLiteにはSQLを実行するためのツールが付属していてそれを使うことが多いんですが、
+今回は全部Pythonからやることにします。</p>
+
+<ol>
+<li>まずモジュールをインポート</li>
+<li>データベースへ接続</li>
+<li>SQLを実行するためのカーソルを取得</li>
+<li>SQLを実行</li>
+<li>使い終わったカーソルを開放</li>
+<li>接続を閉じる</li>
+</ol>
+
+
+<p>``` python</p>
+
+<blockquote><blockquote><blockquote><p>import sqlite3 # (1)
+conn = sqlite3.connect(&lsquo;./hoge.db&rsquo;) # (2)
+cur = conn.cursor() # (3)
+cur.execute(&lsquo;CREATE TABLE books (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, author TEXT);&rsquo;) # (4)
+&lt;sqlite3.Cursor object at 0xffec02a0>
+cur.close() # (5)
+conn.close() # (6)
+```</p></blockquote></blockquote></blockquote>
+
+<p>これでhoge.dbというデータベースファイルができて、さらにbooksというテーブルが作られました。
+接続はまだしも、カーソルという聞き慣れない言葉が出てきましたが後で説明するので、
+とりあえずSQLを実行するにはカーソルが必要だと思っておいてください。</p>
+
+<p>カーソルのexecute()メソッドでSQLを実行でき、戻り値は呼び出し先と同一のカーソルになります。</p>
+
+<h2>データベースから行を読んでみよう</h2>
+
+<p>またデータベースへ接続し、カーソルを取得しましょう。
+そしてSELECT文を実行し、カーソルを介して結果を取得します。
+カーソルはイテレータとして扱うことができますのでforでprintしています。</p>
+
+<p>``` python</p>
+
+<blockquote><blockquote><blockquote><p>cur.execute(&lsquo;SELECT * FROM books;&rsquo;)
+&lt;sqlite3.Cursor object at 0xffec02a0>
+for row in cur:
+&hellip;   print row
+&hellip;</p>
+
+<p>```</p></blockquote></blockquote></blockquote>
+
+<p>はい、何もprintされません。
+まだテーブルに何もデータが入っていないからですね。</p>
+
+<h2>データベースへ行を入れてみよう</h2>
+
+<p>もう大体わかると思いますので、説明は割愛します。</p>
+
+<p>``` python</p>
+
+<blockquote><blockquote><blockquote><p>cur.execute(&lsquo;INSERT INTO books (name, author) VALUES (&ldquo;今度、転職します&rdquo;, &ldquo;先輩&rdquo;);&rsquo;)
+&lt;sqlite3.Cursor object at 0xffec02a0>
+cur.execute(&lsquo;INSERT INTO books (name, author) VALUES (&ldquo;Yes, we can&rdquo;, &ldquo;Obama&rdquo;);&rsquo;)
+&lt;sqlite3.Cursor object at 0xffec02a0>
+conn.commit()
+```</p></blockquote></blockquote></blockquote>
+
+<p>COMMITは接続オブジェクトのcommit()メソッドで行えます。</p>
+
+<h2>もう一回、データベースから行を読んでみる</h2>
+
+<p>``` python</p>
+
+<blockquote><blockquote><blockquote><p>cur.execute(&lsquo;SELECT * FROM books;&rsquo;)
+&lt;sqlite3.Cursor object at 0xffec02a0>
+for row in cur:
+&hellip;   print row
+&hellip;
+(1, u'\u4eca\u5ea6\u3001\u8ee2\u8077\u3057\u307e\u3059', u'\u5148\u8f29')
+(2, u'Yes, we can', u'Obama')
+```</p></blockquote></blockquote></blockquote>
+
+<p>表示されましたね！
+日本語はうまく表示されてないのはUnicode文字列として読み込まれるためです。
+適切に文字コード変換すればちゃんと表示されます。</p>
+
+<h2>終わり</h2>
+
+<p>大体、こんな感じです。
+詳しくはドキュメントを見てね。</p>
+
+<p><a href="http://docs.python.jp/2.7/library/sqlite3.html">http://docs.python.jp/2.7/library/sqlite3.html</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Pytzでタイムゾーンを考慮する方法]]></title>
