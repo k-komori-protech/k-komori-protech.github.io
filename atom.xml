@@ -4,7 +4,7 @@
   <title><![CDATA[後輩に贈るブログ]]></title>
   <link href="http://k-komori-protech.github.io/atom.xml" rel="self"/>
   <link href="http://k-komori-protech.github.io/"/>
-  <updated>2014-01-24T00:19:01+09:00</updated>
+  <updated>2014-01-25T01:50:12+09:00</updated>
   <id>http://k-komori-protech.github.io/</id>
   <author>
     <name><![CDATA[先輩]]></name>
@@ -12,6 +12,89 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Virtualenvを使ってみる]]></title>
+    <link href="http://k-komori-protech.github.io/blog/2014/01/24/introduction-to-virtualenv/"/>
+    <updated>2014-01-24T23:53:01+09:00</updated>
+    <id>http://k-komori-protech.github.io/blog/2014/01/24/introduction-to-virtualenv</id>
+    <content type="html"><![CDATA[<p>Pythonで開発してる中で外部のライブラリを使うってのはよくある話です。</p>
+
+<p>ライブラリのインストールは1コマンドでできるぐらい簡単ではあるんですが、
+普通にインストールしてしまうとシステムのPython環境にインストールされていまいます。
+例えば、/usr/lib/python2.7/site-packagesなどです。</p>
+
+<p>ここで問題になるのは、こうしてしまうとライブラリのバージョンが固定されてしまうことです。
+複数のアプリから同じライブラリを使用していても依存してるバージョンが異なってるというケースもありますし、
+テストなどで一時的にインストールしたアプリの依存しているライブラリがシステムに入っているバージョンと異なっているようなケースもあるでしょう。
+システムにインストールしているPython環境を汚してしまうという点も何か嫌ですね。</p>
+
+<p>こういう時どうしましょうか？想像できるのはPythonを丸ごとコピーしてそれぞれに別バージョンのライブラリをインストールする。
+これを簡単に行うツールが「virtualenv」です。</p>
+
+<h2>virtualenvをセットアップしよう</h2>
+
+<p>まず以下からソースコードを落としてきます。
+virtualenv-1.11.1.tar.gzというのがそうです。</p>
+
+<p><a href="https://pypi.python.org/pypi/virtualenv">https://pypi.python.org/pypi/virtualenv</a></p>
+
+<p>ダウンロードが終わったら展開して、作成されたディレクトリに移動しましょう。
+そして、setup.pyを実行します。以下のような感じです。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>tar xzvf virtualenv-1.11.1.tar.gz
+</span><span class='line'><span class="nv">$ </span><span class="nb">cd </span>virtualenv-1.11.1
+</span><span class='line'><span class="nv">$ </span>python setup.py install
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>これでインストールは終わりです。
+ちなみにeasy_installというコマンドでもインストールできますが諸事情により今回は使いませんでした。</p>
+
+<h2>virtualenv環境を構築する</h2>
+
+<p>以下のようにして作ります。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>virtualenv ~/testenv
+</span><span class='line'>New python executable in /home/k2/testenv/bin/python2.7
+</span><span class='line'>Also creating executable in /home/k2/testenv/bin/python
+</span><span class='line'>Installing setuptools, pip...done.
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>~/testenvにvirtualenv環境ができました。
+簡単ですね。</p>
+
+<h2>virtualenv環境に入る</h2>
+
+<p>virtualenv環境の下のbin/activateを読み込むと入れます。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span><span class="nb">source</span> ~/testenv/bin/activate
+</span><span class='line'><span class="o">(</span>testenv<span class="o">)</span> <span class="err">$</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>プロンプトのところが変わったのに気付きましたか？
+この状態でpythonを実行した時に起動するのは~/testenvの中のpythonになります。
+which pythonをしてみれば明らかです。</p>
+
+<h2>この後どうする？</h2>
+
+<p>この状態でライブラリをインストールすると~/testenvの下にインストールされます。
+システムにインストールされているPythonの環境は汚れないわけですね。
+使い終わったら~/testenvをただ消してしまえばOKです。
+エコですね。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[PythonでSQLite3を操作する方法]]></title>
